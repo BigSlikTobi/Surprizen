@@ -1,3 +1,5 @@
+#run `bundle install` to install the gems listed in this file.
+
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
@@ -18,6 +20,8 @@ gem "stimulus-rails"
 gem "jbuilder"
 # Dotenv for environment variables [https://github.com/bkeepers/dotenv]
 gem "dotenv-rails"
+# Add Gemini AI to your Rails application to enable communication with the Gemini AI API [https://github.com/gemini-ai/gemini-ai-ruby]
+gem 'gemini-ai'
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
