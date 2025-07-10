@@ -3,4 +3,6 @@ class Journey < ApplicationRecord
     belongs_to :user
     has_one :journey_user, class_name: 'User', foreign_key: 'journey_id'
     has_one :conversation
+    has_many :steps
+    accepts_nested_attributes_for :steps
 end

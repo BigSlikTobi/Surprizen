@@ -1,0 +1,5 @@
+<!-- This template defines how one single step is displayed -->
+<div class="p-4 bg-gray-100 rounded-lg">
+  <h4 class="font-bold">Step <%= step.step_number %>: <%= step.puzzle_type.humanize %></h4>
+  <p class="mt-2">Clue: <%= step.clue || "To be generated." %></p>
+</div>

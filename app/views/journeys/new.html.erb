@@ -1,0 +1,37 @@
+<h1>Let's Design Your Surprise!</h1>
+
+<div style="display: flex; gap: 2rem;">
+
+  <%# Left Side: The Chat Interface %>
+  <div style="flex: 2;">
+    <div id="chat_log">
+      <div class="message">
+        <strong>Surprizen Bot:</strong> Hello! Ready to plan an awesome Surprizen Journey?
+      </div>
+    </div>
+    <hr>
+
+    <%# THIS IS THE MISSING LINE THAT NEEDS TO BE ADDED %>
+    <%= form_with url: chat_journeys_path, method: :post do |form| %>
+
+      <div class="field">
+        <%= form.label :message %>
+        <%= form.text_field :message, autocomplete: "off" %>
+      </div>
+
+      <div class="actions">
+        <%= form.submit "Send" %>
+      </div>
+      
+    <%# This 'end' tag was causing the error because its opening tag was missing %>
+    <% end %>
+  </div>
+
+  <%# Right Side: The Live-Updating Profile Card %>
+  <div style="flex: 1;">
+    <%= turbo_frame_tag "profile_card" do %>
+      <%= render "journeys/profile_card", journey: @journey %>
+    <% end %>
+  </div>
+
+</div>

@@ -1,4 +1,13 @@
 Rails.application.routes.draw do
+  # Sets the home page to the new journey chat interface
+  root "journeys#new"
+
+  # Creates the route for the chat form submission
+  post 'journeys/chat', to: 'journeys#chat', as: :chat_journeys
+  
+  resources :journeys do
+    resources :steps
+  end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

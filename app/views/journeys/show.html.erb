@@ -1,0 +1,16 @@
+<!-- This is the main container for your storyboard page -->
+<div>
+  <h2 class="text-3xl font-bold">Your Storyboard: <%= @journey.title %></h2>
+  <p class="text-gray-600">Review the steps for your surprise journey below.</p>
+
+  <div class="mt-6 space-y-4">
+    <%# This line will render the _step.html.erb partial for each step %>
+    <%= render @journey.steps.order(:step_number) %>
+  </div>
+
+  <div class="mt-8">
+    <a href="#" class="bg-green-600 text-white font-bold py-3 px-4 rounded-lg">
+      Proceed to Payment
+    </a>
+  </div>
+</div>

@@ -4,7 +4,7 @@ one:
   title: MyString
   recipient_name: MyString
   budget: 9.99
-  occation: MyString
+  occasion: MyString
   tone: MyString
   status: 1
   scheduled_at: 2025-07-06 11:43:29
@@ -13,7 +13,7 @@ two:
   title: MyString
   recipient_name: MyString
   budget: 9.99
-  occation: MyString
+  occasion: MyString
   tone: MyString
   status: 1
   scheduled_at: 2025-07-06 11:43:29

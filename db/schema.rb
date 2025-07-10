@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_06_143132) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_08_202505) do
   create_schema "auth"
   create_schema "extensions"
   create_schema "graphql"
@@ -41,13 +41,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_06_143132) do
     t.string "title"
     t.string "recipient_name"
     t.decimal "budget"
-    t.string "occation"
+    t.string "occasion"
     t.string "tone"
     t.integer "status"
     t.datetime "scheduled_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.string "interests"
     t.index ["user_id"], name: "index_journeys_on_user_id"
   end
 

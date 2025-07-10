@@ -71,7 +71,7 @@ class StrategyChatService
     Your task is to analyze this vision and collaborate with the user to create a concrete strategy. 
     Your goal is to define: 
     1) The number of puzzle steps (between 3 and 5), 
-    2) The type of puzzles for each step, 
+    2) The type of puzzles for each step which is called puzzle_type (e.g., riddle, image puzzle, quiz),
     3) The distribution channels (e.g., email, SMS), and 4) A shortlist of two specific gift ideas that match the user's vision and budget. 
     When you have gathered all this information, present the final strategy in a structured JSON format.
     
@@ -80,10 +80,10 @@ class StrategyChatService
         'strategy': {
             'step_count': 4,
             'steps': [
-                { 'type': 'riddle', 'channel': 'email' },
-                { 'type': 'image_puzzle', 'channel': 'email' },
-                { 'type': 'quiz', 'channel': 'sms' },
-                { 'type': 'final_reveal', 'channel': 'web' }
+                { 'puzzle_type': 'riddle', 'channel': 'email' },
+                { 'puzzle_type': 'image_puzzle', 'channel': 'email' },
+                { 'puzzle_type': 'quiz', 'channel': 'sms' },
+                { 'puzzle_type': 'final_reveal', 'channel': 'web' }
             ],
             'gift_shortlist': [
                 { 'name': 'Weekend Getaway', 'description': 'A trip to a seaside art retreat.' },

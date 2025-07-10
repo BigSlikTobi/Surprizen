@@ -1,0 +1,26 @@
+<div id="profile_card">
+  <h3>Surprise Details</h3>
+  <p>
+    <strong>Recipient:</strong>
+    <%= journey.recipient_name.presence || "Not set" %>
+  </p>
+  <p>
+    <strong>Occasion:</strong>
+    <%= journey.occasion.presence || "Not set" %>
+  </p>
+  <p>
+    <strong>Interests:</strong>
+    <%= journey.interests.presence || "Not set" %>
+  </p>
+  <p>
+    <strong>Budget:</strong>
+    <%= journey.budget.presence || "Not set" %>
+  </p>
+  <p>
+    <strong>Tone:</strong>
+    <%= journey.tone.presence || "Not set" %>
+  </p>
+    <p>
+    <strong>Scheduled At:</strong>
+    <%= journey.scheduled_at.present? ? journey.scheduled_at.strftime("%B %d, %Y") : "Not set" %>
+</div>
