@@ -1,5 +1,7 @@
-<!-- This template defines how one single step is displayed -->
-<div class="p-4 bg-gray-100 rounded-lg">
-  <h4 class="font-bold">Step <%= step.step_number %>: <%= step.puzzle_type.humanize %></h4>
-  <p class="mt-2">Clue: <%= step.clue || "To be generated." %></p>
+<%# This partial renders a single step. The 'step' variable is provided by Rails. %>
+<%# We add a staggered animation delay based on the step's position in the list. %>
+<div class="animate-fade-in-up rounded-lg border border-white/50 bg-white/30 p-4" style="animation-delay: <%= step_counter * 100 %>ms;">
+  <h4 class="font-bold text-gray-800">Step <%= step.step_number %>: <%= step.puzzle_type.humanize %></h4>
+  <p class="text-sm text-gray-600">Channel: <%= step.channel %></p>
+  <p class="mt-2 text-gray-700">Clue: <%= step.clue || "To be generated." %></p>
 </div>

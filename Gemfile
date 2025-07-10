@@ -18,6 +18,7 @@ gem "turbo-rails"
 gem "stimulus-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
+gem "tailwindcss-rails"
 # Dotenv for environment variables [https://github.com/bkeepers/dotenv]
 gem "dotenv-rails"
 # Add Gemini AI to your Rails application to enable communication with the Gemini AI API [https://github.com/gemini-ai/gemini-ai-ruby]
