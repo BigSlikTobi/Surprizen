@@ -1,15 +1,15 @@
-<!-- This is the main container for your storyboard page -->
-<div>
-  <h2 class="text-3xl font-bold">Your Storyboard: <%= @journey.title %></h2>
-  <p class="text-gray-600">Review the steps for your surprise journey below.</p>
+<!-- Main Glass Panel for the storyboard, with fade-in animation -->
+<div class="animate-fade-in-up rounded-2xl border border-white/40 bg-white/20 p-6 shadow-lg backdrop-blur-xl md:p-8">
+  <h2 class="mb-2 text-3xl font-bold text-gray-900">Your Storyboard: <%= @journey.title %></h2>
+  <p class="mb-8 text-gray-600">Review the steps for your surprise journey below. This is the plan that will be launched for your recipient.</p>
 
-  <div class="mt-6 space-y-4">
-    <%# This line will render the _step.html.erb partial for each step %>
+  <div class="space-y-6">
+    <!-- Render the collection of steps using a partial. Rails will loop through them automatically. -->
     <%= render @journey.steps.order(:step_number) %>
   </div>
 
-  <div class="mt-8">
-    <a href="#" class="bg-green-600 text-white font-bold py-3 px-4 rounded-lg">
+  <div class="mt-10 border-t border-white/40 pt-6">
+    <a href="#" class="block w-full rounded-lg bg-green-600 px-4 py-3 text-center font-bold text-white shadow-md transition hover:scale-105 hover:bg-green-700 active:scale-95">
       Proceed to Payment
     </a>
   </div>

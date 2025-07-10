@@ -1,3 +1,15 @@
-<div class="message">
-  <strong><%= message.role.humanize %>:</strong> <%= message.content %>
-</div>
+<% if message.role == 'user' %>
+  <!-- User Message -->
+  <div class="flex justify-end">
+    <div class="max-w-md rounded-lg rounded-br-none bg-blue-600 p-3 text-white">
+      <p class="text-sm"><%= message.content %></p>
+    </div>
+  </div>
+<% else %>
+  <!-- Bot/Error Message -->
+  <div class="flex">
+    <div class="max-w-md rounded-lg rounded-bl-none bg-gray-200/50 p-3">
+      <p class="text-sm text-gray-700"><%= message.content %></p>
+    </div>
+  </div>
+<% end %>

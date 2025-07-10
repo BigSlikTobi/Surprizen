@@ -1,62 +1,53 @@
-class StoryboardCreationService 
-    Result = Struct.new(:success?, :data, :error, keyword_init: true)
+class StoryboardCreationService
+  Result = Struct.new(:success?, :data, :error, keyword_init: true)
 
-    def initialize(journey:)
-        # Initialize the service with a journey object from which we can derive the conversation from the database.
-        @journey = journey
+  def initialize(journey:)
+    @journey = journey
+  end
+
+  def call
+    last_message = get_last_ai_message
+    return Result.new(success?: false, error: "No AI messages found.") unless last_message
+
+    json_data = extract_json_from_content(last_message.content)
+    return Result.new(success?: false, error: "Last AI message contains no valid JSON.") unless json_data
+
+    steps_array = json_data.dig('strategy', 'steps')
+    return Result.new(success?: false, error: "JSON is missing 'strategy.steps' array.") unless steps_array.is_a?(Array)
+
+    save_steps(steps_array)
+
+    Result.new(success?: true, data: @journey)
+  end
+
+  private
+
+  def get_last_ai_message
+    @journey.conversation&.messages&.where(role: 'model')&.order(:created_at)&.last
+  end
+
+  def extract_json_from_content(text_content)
+    # This regex is designed to find a JSON object embedded in a larger string.
+    match_data = text_content.match(/\{.*\}/m)
+    return nil unless match_data
+    JSON.parse(match_data[0])
+  rescue JSON::ParserError
+    nil
+  end
+
+  def save_steps(steps_data)
+    # This maps the keys from the AI's JSON to your database column names.
+    # This is where you would rename 'type' to 'step_type', for example.
+    transformed_attributes = steps_data.map.with_index do |step_hash, index|
+      { 
+        step_type: step_hash['type'], 
+        channel: step_hash['channel'], 
+        step_number: index + 1 # Assign step number based on array order
+      }
     end
 
-    # get the output from the StrategicChatService and extract the json data and saving it to the steps table in the database.
-    def call
-        # 1. Find the last message in the conversation
-        last_message = get_last_ai_message
-        unless last_message
-            return Result.new(success?: false, error: "No AI message found in the conversation")
-        end
-
-        # 2. Extract the JSON string from the last message
-        json_data = extract_json_from_content(last_message.content)
-        unless json_data
-            return Result.new(success?: false, error: "No JSON data found in the last message")
-        end
-
-        #3. Parse the JSON and find the nested array of steps
-        steps_array = json_data.dig('strategy', 'steps')
-        unless steps_array.is_a?(Array)
-            return Result.new(success?: false, error: "json is missing the 'steps' array")
-        end 
-
-        #4. create the Step records in the database
-        save_steps(steps_array)
-        Result.new(success?:true, data: journey.reload.steps)
-    end
-
-    private
-    attr_reader :journey
-
-    def get_last_ai_message
-        # This method retrieves the last AI message from the conversation.
-        journey.conversation.messages.where(role: 'model')&.order(:created_at)&.last
-    end
-
-    def extract_json_from_content (text_content)
-        # The json might be surounded by other text so we will need regex to extract it.
-        match_data = text_content.match(/({.*})/m)
-        return nil unless match_data
-
-        json_string = match_data[0] # Extract the matched JSON string
-
-        JSON.parse(json_string)
-    rescue JSON::ParserError
-        nil # If parsing fails, return nil
-    end
-
-    def save_steps (steps_data)
-        #THe 'accepts_nested_attributes_for :steps' in the Journey model allows us to create steps directly through the journey.
-        journey.update!(steps_attributes: steps_data)
-    rescue ActiveRecord::RecordInvalid => e
-        # If saving the steps fails, return an error result.
-        raise e
-    end
+    # Thanks to `accepts_nested_attributes_for`, this single `update!` call
+    # creates all the Step records in one database transaction.
+    @journey.update!(steps_attributes: transformed_attributes)
+  end
 end
-
