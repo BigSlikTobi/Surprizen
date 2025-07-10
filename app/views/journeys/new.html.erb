@@ -1,37 +1,40 @@
-<h1>Let's Design Your Surprise!</h1>
+<!-- Main responsive container: stacks vertically on mobile, becomes a row on medium screens -->
+<div class="flex flex-col gap-8 md:flex-row animate-fade-in-up">
 
-<div style="display: flex; gap: 2rem;">
+  <!-- Left Column: Chat Interface -->
+  <div class="w-full md:w-2/3">
+    <!-- Glass Panel for the chat -->
+    <div class="flex h-[75vh] flex-col rounded-2xl border border-white/40 bg-white/20 shadow-lg backdrop-blur-xl">
 
-  <%# Left Side: The Chat Interface %>
-  <div style="flex: 2;">
-    <div id="chat_log">
-      <div class="message">
-        <strong>Surprizen Bot:</strong> Hello! Ready to plan an awesome Surprizen Journey?
+      <!-- Chat Log Container -->
+      <%= turbo_stream_from @journey do %>
+      <div id="chat_log" class="flex-grow space-y-4 overflow-y-auto p-6 pr-4">
+        <!-- Messages will be appended here by Turbo Streams -->
+        <div class="flex">
+          <div class="max-w-md rounded-lg rounded-bl-none bg-gray-200/50 p-3">
+            <p class="text-sm text-gray-700">Hello! I'm your friendly gift concierge. Tell me a bit about the surprise you're planning.</p>
+          </div>
+        </div>
+      </div>
+      <% end %>
+
+      <!-- Input Form -->
+      <div class="border-t border-white/30 p-6">
+        <%= form_with url: chat_journeys_path, method: :post, class: "space-y-4" do |form| %>
+          <div>
+            <%= form.label :message, "Your Message", class: "text-sm font-medium text-gray-600" %>
+            <%= form.text_field :message, autocomplete: "off", placeholder: "Type your message here...", class: "mt-1 w-full rounded-lg border border-gray-300/50 bg-white/40 p-3 transition focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+          </div>
+          <%= form.submit "Send", class: "w-full cursor-pointer rounded-lg bg-blue-600 px-4 py-3 font-bold text-white shadow-md transition hover:scale-105 active:scale-95 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" %>
+        <% end %>
       </div>
     </div>
-    <hr>
-
-    <%# THIS IS THE MISSING LINE THAT NEEDS TO BE ADDED %>
-    <%= form_with url: chat_journeys_path, method: :post do |form| %>
-
-      <div class="field">
-        <%= form.label :message %>
-        <%= form.text_field :message, autocomplete: "off" %>
-      </div>
-
-      <div class="actions">
-        <%= form.submit "Send" %>
-      </div>
-      
-    <%# This 'end' tag was causing the error because its opening tag was missing %>
-    <% end %>
   </div>
 
-  <%# Right Side: The Live-Updating Profile Card %>
-  <div style="flex: 1;">
+  <!-- Right Column: Sidebar -->
+  <div class="w-full md:w-1/3">
     <%= turbo_frame_tag "profile_card" do %>
       <%= render "journeys/profile_card", journey: @journey %>
     <% end %>
   </div>
-
 </div>

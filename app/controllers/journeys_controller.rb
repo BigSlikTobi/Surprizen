@@ -27,38 +27,13 @@ class JourneysController < ApplicationController
 
   def chat
     @journey = Journey.find(session[:journey_id])
-    service = VisionChatService.new(journey: @journey)
-    result = service.call(prompt_text: params[:message])
+    user_message = @journey.conversation.messages.create!(role: 'user', content: params[:message])
 
-    if result.success?
-      user_message = @journey.conversation.messages.where(role: 'user').last
-      ai_response = @journey.conversation.messages.where(role: 'model').last
-    
-      # We will build an array of streams to render.
-      streams = []
-    
-      # Always append the chat messages.
-      streams << turbo_stream.append("chat_log", partial: "messages/message", locals: { message: user_message })
-      streams << turbo_stream.append("chat_log", partial: "messages/message", locals: { message: ai_response })
-    
-      # Conditionally add the profile card update if journey was updated.
-      if result.journey_updated?
-        # Reload the journey to get the latest data
-        @journey.reload
-        streams << turbo_stream.update("profile_card", partial: "journeys/profile_card", locals: { journey: @journey })
-      end
-    
-      respond_to do |format|
-        format.turbo_stream { render turbo_stream: streams }
-      end
-    else
-      # The error handling remains the same.
-      error_message = OpenStruct.new(role: 'Error', content: result.error)
-      respond_to do |format|
-        format.turbo_stream do
-          render turbo_stream: turbo_stream.append("chat_log", partial: "messages/message", locals: { message: error_message })
-        end
-      end
-    end
+    render turbo_stream: [
+      turbo_stream.append("chat_log", partial: "messages/message", locals: { message: user_message }),
+      turbo_stream.append("chat_log", partial: "messages/_typing_indicator")
+    ]
+
+    VisionChatJob.perform_later(@journey)
   end
 end
