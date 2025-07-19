@@ -1,0 +1,420 @@
+import Stripe from 'stripe';
+
+// Check if Stripe configuration is available
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const isStripeConfigured = Boolean(stripeSecretKey);
+const isBetaMode = process.env.NODE_ENV === 'development' || !isStripeConfigured;
+
+// Initialize Stripe with secret key (only if configured and not in beta mode)
+let stripe: Stripe | null = null;
+
+if (isStripeConfigured && !isBetaMode) {
+  try {
+    stripe = new Stripe(stripeSecretKey!, {
+      apiVersion: '2025-06-30.basil',
+    });
+    console.log('Stripe service initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Stripe:', error);
+    console.log('Falling back to mock payment features for beta');
+  }
+} else {
+  console.log('Running in beta mode - using mock payment features');
+}
+
+export interface CreateCustomerData {
+  email: string;
+  name?: string;
+  metadata?: Record<string, string>;
+}
+
+export interface CreatePaymentIntentData {
+  amount: number; // in cents
+  currency: string;
+  customerId?: string;
+  metadata?: Record<string, string>;
+}
+
+export interface CreateSubscriptionData {
+  customerId: string;
+  priceId: string;
+  metadata?: Record<string, string>;
+}
+
+export interface UpdateSubscriptionData {
+  subscriptionId: string;
+  priceId?: string;
+  cancelAtPeriodEnd?: boolean;
+  metadata?: Record<string, string>;
+}
+
+// Mock data for beta mode
+const mockCustomers = new Map<string, any>();
+const mockPaymentIntents = new Map<string, any>();
+const mockSubscriptions = new Map<string, any>();
+let mockIdCounter = 1;
+
+const generateMockId = (prefix: string) => `${prefix}_mock_${mockIdCounter++}_${Date.now()}`;
+
+export class StripeService {
+  /**
+   * Create a new Stripe customer
+   */
+  async createCustomer(data: CreateCustomerData): Promise<Stripe.Customer> {
+    try {
+      if (!stripe) {
+        // Mock implementation for beta
+        const mockCustomer = {
+          id: generateMockId('cus'),
+          object: 'customer',
+          email: data.email,
+          name: data.name || null,
+          metadata: data.metadata || {},
+          created: Math.floor(Date.now() / 1000),
+          currency: 'usd',
+          default_source: null,
+          deleted: false,
+          description: null,
+          discount: null,
+          invoice_prefix: null,
+          invoice_settings: {
+            custom_fields: null,
+            default_payment_method: null,
+            footer: null,
+          },
+          livemode: false,
+          shipping: null,
+          sources: { object: 'list', data: [], has_more: false, total_count: 0, url: '' },
+          subscriptions: { object: 'list', data: [], has_more: false, total_count: 0, url: '' },
+          tax_exempt: 'none',
+          tax_ids: { object: 'list', data: [], has_more: false, total_count: 0, url: '' },
+        } as Stripe.Customer;
+
+        mockCustomers.set(mockCustomer.id, mockCustomer);
+        console.log('Mock Stripe customer created:', mockCustomer.id);
+        return mockCustomer;
+      }
+
+      const customer = await stripe.customers.create({
+        email: data.email,
+        name: data.name,
+        metadata: data.metadata || {},
+      });
+      
+      console.log('Stripe customer created:', customer.id);
+      return customer;
+    } catch (error) {
+      console.error('Error creating Stripe customer:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to create customer: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Get a Stripe customer by ID
+   */
+  async getCustomer(customerId: string): Promise<Stripe.Customer | null> {
+    try {
+      if (!stripe) {
+        // Mock implementation for beta
+        const mockCustomer = mockCustomers.get(customerId);
+        return mockCustomer || null;
+      }
+
+      const customer = await stripe.customers.retrieve(customerId);
+      
+      if (customer.deleted) {
+        return null;
+      }
+      
+      return customer as Stripe.Customer;
+    } catch (error) {
+      console.error('Error retrieving Stripe customer:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update a Stripe customer
+   */
+  async updateCustomer(
+    customerId: string,
+    data: Partial<CreateCustomerData>
+  ): Promise<Stripe.Customer> {
+    try {
+      const customer = await stripe.customers.update(customerId, {
+        email: data.email,
+        name: data.name,
+        metadata: data.metadata,
+      });
+      
+      console.log('Stripe customer updated:', customer.id);
+      return customer;
+    } catch (error) {
+      console.error('Error updating Stripe customer:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to update customer: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Create a payment intent for experience credits
+   */
+  async createPaymentIntent(data: CreatePaymentIntentData): Promise<Stripe.PaymentIntent> {
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: data.amount,
+        currency: data.currency,
+        customer: data.customerId,
+        metadata: {
+          type: 'experience_credits',
+          ...data.metadata,
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+      
+      console.log('Payment intent created:', paymentIntent.id);
+      return paymentIntent;
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to create payment intent: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Get a payment intent by ID
+   */
+  async getPaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent | null> {
+    try {
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      return paymentIntent;
+    } catch (error) {
+      console.error('Error retrieving payment intent:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Confirm a payment intent
+   */
+  async confirmPaymentIntent(
+    paymentIntentId: string,
+    paymentMethodId: string
+  ): Promise<Stripe.PaymentIntent> {
+    try {
+      const paymentIntent = await stripe.paymentIntents.confirm(paymentIntentId, {
+        payment_method: paymentMethodId,
+      });
+      
+      console.log('Payment intent confirmed:', paymentIntent.id);
+      return paymentIntent;
+    } catch (error) {
+      console.error('Error confirming payment intent:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to confirm payment: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Create a subscription
+   */
+  async createSubscription(data: CreateSubscriptionData): Promise<Stripe.Subscription> {
+    try {
+      const subscription = await stripe.subscriptions.create({
+        customer: data.customerId,
+        items: [
+          {
+            price: data.priceId,
+          },
+        ],
+        metadata: data.metadata || {},
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent'],
+      });
+      
+      console.log('Subscription created:', subscription.id);
+      return subscription;
+    } catch (error) {
+      console.error('Error creating subscription:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to create subscription: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Update a subscription
+   */
+  async updateSubscription(data: UpdateSubscriptionData): Promise<Stripe.Subscription> {
+    try {
+      const updateData: Stripe.SubscriptionUpdateParams = {
+        metadata: data.metadata,
+      };
+
+      if (data.priceId) {
+        // Get current subscription to update price
+        const currentSub = await stripe.subscriptions.retrieve(data.subscriptionId);
+        updateData.items = [
+          {
+            id: currentSub.items.data[0].id,
+            price: data.priceId,
+          },
+        ];
+      }
+
+      if (data.cancelAtPeriodEnd !== undefined) {
+        updateData.cancel_at_period_end = data.cancelAtPeriodEnd;
+      }
+
+      const subscription = await stripe.subscriptions.update(data.subscriptionId, updateData);
+      
+      console.log('Subscription updated:', subscription.id);
+      return subscription;
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to update subscription: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Cancel a subscription
+   */
+  async cancelSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
+    try {
+      const subscription = await stripe.subscriptions.cancel(subscriptionId);
+      
+      console.log('Subscription cancelled:', subscription.id);
+      return subscription;
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to cancel subscription: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Get a subscription by ID
+   */
+  async getSubscription(subscriptionId: string): Promise<Stripe.Subscription | null> {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      return subscription;
+    } catch (error) {
+      console.error('Error retrieving subscription:', error);
+      return null;
+    }
+  }
+
+  /**
+   * List customer subscriptions
+   */
+  async getCustomerSubscriptions(customerId: string): Promise<Stripe.Subscription[]> {
+    try {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: 'all',
+      });
+      
+      return subscriptions.data;
+    } catch (error) {
+      console.error('Error retrieving customer subscriptions:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Create a setup intent for saving payment methods
+   */
+  async createSetupIntent(customerId: string): Promise<Stripe.SetupIntent> {
+    try {
+      const setupIntent = await stripe.setupIntents.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        usage: 'off_session',
+      });
+      
+      console.log('Setup intent created:', setupIntent.id);
+      return setupIntent;
+    } catch (error) {
+      console.error('Error creating setup intent:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to create setup intent: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * List customer payment methods
+   */
+  async getCustomerPaymentMethods(customerId: string): Promise<Stripe.PaymentMethod[]> {
+    try {
+      const paymentMethods = await stripe.paymentMethods.list({
+        customer: customerId,
+        type: 'card',
+      });
+      
+      return paymentMethods.data;
+    } catch (error) {
+      console.error('Error retrieving payment methods:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Handle webhook events
+   */
+  async handleWebhook(
+    payload: string | Buffer,
+    signature: string,
+    endpointSecret: string
+  ): Promise<Stripe.Event> {
+    try {
+      const event = stripe.webhooks.constructEvent(payload, signature, endpointSecret);
+      
+      console.log('Webhook event received:', event.type);
+      return event;
+    } catch (error) {
+      console.error('Error handling webhook:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Webhook signature verification failed: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * Get pricing information
+   */
+  async getPrices(): Promise<Stripe.Price[]> {
+    try {
+      const prices = await stripe.prices.list({
+        active: true,
+        expand: ['data.product'],
+      });
+      
+      return prices.data;
+    } catch (error) {
+      console.error('Error retrieving prices:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Calculate experience credits from amount
+   */
+  calculateCreditsFromAmount(amount: number): number {
+    // $1 = 1 credit, amount is in cents
+    return Math.floor(amount / 100);
+  }
+
+  /**
+   * Calculate amount from experience credits
+   */
+  calculateAmountFromCredits(credits: number): number {
+    // $1 = 1 credit, return amount in cents
+    return credits * 100;
+  }
+}
+
+export const stripeService = new StripeService();

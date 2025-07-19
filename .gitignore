@@ -1,0 +1,58 @@
+# macOS
+.DS_Store
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Expo
+.expo/
+.expo-shared/
+.expo-cache/
+
+# React Native build outputs
+android/
+  # Gradle
+  android/.gradle/
+  android/app/build/
+
+ios/
+  # CocoaPods
+  ios/Pods/
+  ios/build/
+
+# Web and general build outputs
+web-build/
+build/
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.*.local
+
+# Coverage reports
+coverage/
+
+# IDE and editor settings
+.vscode/
+.idea/
+
+# Watchman
+.watchmanconfig
+
+# Service account and secrets
+**/serviceAccount.json
+
+# Metro bundler cache
+metro-cache/
+
+# Yarn PnP
+.pnp.*
